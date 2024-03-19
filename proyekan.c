@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 #ifdef _WIN32
 #define CLEAR "cls" // buat windows
@@ -75,10 +76,19 @@ void showStats(Category *sort_container[], uint categoryCount);
 void defaultCategories(Category categories[], uint *categoryCount);
 void printTips(uint id);
 void printCredits();
+void printToFile(char *nama, int *umur, Category categories[], uint *categoryCount);
+void login(char *nama, int *umur);
 
 int main(void) 
 {
+    char nama[50];
+    int umur;
+
+    //login
+    login(nama, &umur);
+    
     animateLogo();
+
     Device devices[DEVICE_MAX];
     Category categories[CATEGORY_MAX];
     Category *sort_container[CATEGORY_MAX];
@@ -121,19 +131,115 @@ int main(void)
                 showStats(sort_container, categoryCount);
                 break;
             case 4:
-                help();
+                if (deviceCount <= 0)
+                {
+                    printf("PERANGKAT KOSONG!\n");
+                    system(PAUSE);
+                    break;
+                }
+                printToFile(nama, &umur, categories, &categoryCount);
+                printf("File baru telah berhasil dibuat\n");
+                system(PAUSE);
                 break;
             case 5:
-                printCredits();
+                help();
                 break;
             case 6:
+                printCredits();
+                break;
+            case 7:
                 break;
             default:
             printf("Input tidak valid!\n");
         }
-    } while (menuInput != 6);
+    } while (menuInput != 7);
 
     return 0;
+}
+
+void printToFile(char *nama, int *umur, Category categories[], uint *categoryCount){
+    uint i;
+    char namaFile[100];
+
+    // Membuat Nama File Baru
+    strcpy(namaFile, nama);
+    strcat(namaFile, "_data.txt");
+
+    FILE *filePointer;
+
+    // Membuka file untuk ditulis
+    filePointer = fopen(namaFile, "w");
+
+    // Memeriksa apakah file berhasil dibuka
+    if (filePointer == NULL) {
+        printf("File tidak dapat dibuka atau dibuat.\n");
+        return;
+    }
+
+    // Menulis data ke dalam file
+    fprintf(filePointer, "================\n");
+    fprintf(filePointer, "Nama Anda: %s\n", nama);
+    fprintf(filePointer, "Umur Anda: %d\n", umur);
+    fprintf(filePointer, "================\n\n");
+
+    for (i = 0; i < *categoryCount; ++i)
+    {
+        if (categories[i].device_num == 0)
+        {
+            continue;
+        }
+
+        fprintf(filePointer, "===========\n");
+        fprintf(filePointer, "Kategori: %s\n", categories[i].name);
+        fprintf(filePointer, "------------------\n");
+        uint j;
+        for (j = 0; j < categories[i].device_num; ++j)
+        {
+            Device *device = categories[i].devices[j];
+            fprintf(filePointer, "Device %d:\n", j + 1);
+            fprintf(filePointer, "Konsumsi Daya: %.2f watt\n", device->power);
+            fprintf(filePointer, "Periode Penggunaan:\n");
+            uint i;
+            for (i = 0; i < device->period_num; ++i)
+            {
+                fprintf(filePointer, "* %s - %s\n", device->periods[i].begin, device->periods[i].end);
+            }
+            fprintf(filePointer, "Waktu Aktif Harian: %u menit\n", device->activeMinutes);
+            fprintf(filePointer, "Konsumsi Harian: %.2f kwh\n", device->energyDaily);
+            fprintf(filePointer, "-------------\n");
+        }
+        fprintf(filePointer, "Total Konsumsi Harian: %.2f kwh\n", categories[i].totalConsumption);
+        fprintf(filePointer, "========\n\n");
+    }
+
+    // Menutup file
+    fclose(filePointer);
+}
+
+// Fungsi untuk meminta input nama dan umur, dan mencetak informasi dengan efek animasi
+void login(char *nama, int *umur) {
+    printf("===== LOGIN =====\n");
+    printf("Nama Anda: ");
+    scanf("%s", nama);
+    printf("Umur Anda: ");
+    scanf("%d", umur);
+    printf("=================\n");
+
+    printf("Selamat datang, %s!\n", nama);
+    Sleep(1000); // Jeda 1 detik
+    printf("\n");
+    Sleep(500); // Jeda 0.5 detik
+    printf("Loading.");
+    Sleep(500); // Jeda 0.5 detik
+    printf(".");
+    Sleep(500); // Jeda 0.5 detik
+    printf(".");
+    Sleep(500); // Jeda 0.5 detik
+    printf(".\n");
+    Sleep(1000); // Jeda 1 detik
+    printf("Login berhasil!\n\n");
+    Sleep(1500); // Jeda 0.5 detik
+    system("cls");
 }
 
 void printDevice(Device *device)
@@ -350,7 +456,6 @@ void printAllDevices(Category *categories, uint *categoryCount)
     system(PAUSE);
 }
 
-
 void printLogo() 
 {
     printf("  _      __     __  __ _      __     __      __       \n");
@@ -371,10 +476,8 @@ void animateLogo()
 
 void printCredits()
 {
-  printf("JESIE TENARDI (2306162002)\n");
+  printf("AZKA NABIHAN  HILMY (2306250541)\n");
   printf("MUHAMMAD ARYA WIANDRA UTOMO (2306218295)\n");
-  printf("MUHAMMAD IKHSAN KURNIAWAN (2306210784)\n");
-  printf("MUHAMMAD NADZHIF FIKRI (2306210102)\n");
   system(PAUSE);
 }
 
@@ -387,9 +490,10 @@ void help()
     printf("\n\t| 1. Tambahkan Device: Menambahkan perangkat baru ke dalam sistem.                    |");
     printf("\n\t| 2. Tampilkan Device: Menampilkan daftar perangkat yang sudah ditambahkan.           |");
     printf("\n\t| 3. Statistik: Melakukan analisis terhadap data perangkat.                           |");
-    printf("\n\t| 4. Help: Menampilkan menu bantuan.                                                  |");
-    printf("\n\t| 5. Credits: Menampilkan Anggota Kelompok.                                           |");
-    printf("\n\t| 6. Exit: Keluar dari program.                                                       |");
+    printf("\n\t| 4. Save data: Akan menyimpan data user ke dalam file .txt                           |");
+    printf("\n\t| 5. Help: Menampilkan menu bantuan.                                                  |");
+    printf("\n\t| 6. Credits: Menampilkan Anggota Kelompok.                                           |");
+    printf("\n\t| 7. Exit: Keluar dari program.                                                       |");
     printf("\n\t|=====================================================================================|\n");
     system("pause");
 }
@@ -404,13 +508,14 @@ uint getMenu() {
     printf("| 1. Tambahkan Device             |\n");
     printf("| 2. Tampilkan Device             |\n");
     printf("| 3. Statistik                    |\n");
-    printf("| 4. Help                         |\n");
-    printf("| 5. Credits                      |\n");
-    printf("| 6. Exit                         |\n");
+    printf("| 4. Save data                    |\n");
+    printf("| 5. Help                         |\n");
+    printf("| 6. Credits                      |\n");
+    printf("| 7. Exit                         |\n");
     printf("|=================================|\n");
 
     uint menuInput;
-    printf("\nMasukkan input (1 - 6) : ");
+    printf("\nMasukkan input (1 - 7) : ");
     scanf("%d", &menuInput);
     return menuInput;
 }
