@@ -35,6 +35,7 @@ struct Category {
     char name[16]; // Nama (maksimal 16 karakter)
     uint id;       // identifikasi
     float totalConsumption;
+    float totalWatt;
     Device *devices[5]; // Device pada kategori ini
     uint device_num;
 };
@@ -78,6 +79,8 @@ void printTips(uint id);
 void printCredits();
 void printToFile(char *nama, int *umur, Category categories[], uint *categoryCount);
 void login(char *nama, int *umur);
+void searchTotalConsumption(Category categories[], int select, uint categoryCount);
+void searchWatt(Category categories[], int select, uint categoryCount);
 
 int main(void) 
 {
@@ -142,19 +145,107 @@ int main(void)
                 system(PAUSE);
                 break;
             case 5:
-                help();
+                if (deviceCount <= 0)
+                {
+                    printf("PERANGKAT KOSONG!\n");
+                    system(PAUSE);
+                    break;
+                }
+
+                system("cls");
+                printf("|==================================================|\n");
+                printf("|                   Searching Menu                 |\n");
+                printf("|==================================================|\n");
+                printf("| 1. Cari Berdasarkan Total Penggunaan Terbanyak   |\n");
+                printf("| 2. Cari Berdasarkan Total Penggunaan Tersedikit  |\n");
+                printf("| 3. Cari Berdasarkan Watt Terbesar                |\n");
+                printf("| 4. Cari Berdasarkan Watt Terkecil                |\n");
+                printf("| 5. Exit                                          |\n");
+                printf("|==================================================|\n");
+                uint menuInput;
+                printf("\nMasukkan input (1 - 5) : ");
+                scanf("%d", &menuInput);
+                    if (menuInput == 1){
+                        searchTotalConsumption(categories, 1, categoryCount);
+                        system(PAUSE);
+                    } else if (menuInput == 2){
+                        searchTotalConsumption(categories, 2, categoryCount);
+                        system(PAUSE);
+                    } else if (menuInput == 3){
+                        searchWatt(categories, 1, categoryCount);
+                        system(PAUSE);
+                    } else if (menuInput == 4){
+                        searchWatt(categories, 2, categoryCount);
+                        system(PAUSE);
+                    } else if (menuInput == 5){
+                        break;
+                    } else {
+                        printf("Input Invalid!\n");
+                        Sleep(500);
+                        system("cls");
+                    }
                 break;
             case 6:
-                printCredits();
+                help();
                 break;
             case 7:
+                printCredits();
+                break;
+            case 8:
                 break;
             default:
             printf("Input tidak valid!\n");
         }
-    } while (menuInput != 7);
+    } while (menuInput != 8);
 
     return 0;
+}
+
+void searchWatt(Category categories[], int select, uint categoryCount){
+    int i, temp;
+    switch(select){
+        case 1:
+            for (i = 0; i<categoryCount - 1; i++){
+                if(categories[i].totalWatt > categories[i+1].totalWatt){
+                    temp = i;
+                }
+            }
+            printf("\nKategori dengan daya terbesar: %s\n", categories[temp].name);
+            printf("Total daya: %.2f watt\n", categories[temp].totalWatt);
+            break;
+        case 2:
+            for (i = 0; i<categoryCount - 1; i++){
+                if(categories[i].totalWatt < categories[i+1].totalWatt){
+                    temp = i;
+                }
+            }
+            printf("\nKategori dengan daya terkecil: %s\n", categories[temp].name);
+            printf("Total daya: %.2f watt\n", categories[temp].totalWatt);
+            break;
+        default:
+            break;
+    }
+}
+
+
+void searchTotalConsumption(Category categories[], int select, uint categoryCount){
+    int i, j;
+
+    switch (select)
+    {
+    // Mencari dari terbanyak
+    case 1:
+        printf("\nKategori dengan konsumsi terbanyak: %s\n", categories[categoryCount-1].name);
+        printf("Total konsumsi daya: %.2f kwh\n", categories[categoryCount].totalConsumption);
+        break;
+    // Mencari dari tersedikit
+    case 2:
+        printf("\nKategori dengan konsumsi paling sedikit: %s\n", categories[0].name);
+        printf("Total konsumsi daya: %.2f kwh\n", categories[0].totalConsumption);
+        break;
+    default:
+        break;
+    }
 }
 
 void printToFile(char *nama, int *umur, Category categories[], uint *categoryCount){
@@ -362,6 +453,7 @@ void addPeriod(Device *device)
     device->period_num++;
     updateConsumption(device);
     device->category->totalConsumption += device->energyDaily;
+    device->category->totalWatt += device->power;
 }
 
 bool checkTimeFormat(char time[])
@@ -391,6 +483,7 @@ void addCategory(Category categories[], uint *categoryCount)
     scanf("%s", categories[*categoryCount].name);
     categories[*categoryCount].id = *categoryCount;
     categories[*categoryCount].totalConsumption = 0;
+    categories[*categoryCount].totalWatt = 0;
     categories[*categoryCount].device_num = 0;
     (*categoryCount)++;
 }
@@ -491,9 +584,10 @@ void help()
     printf("\n\t| 2. Tampilkan Device: Menampilkan daftar perangkat yang sudah ditambahkan.           |");
     printf("\n\t| 3. Statistik: Melakukan analisis terhadap data perangkat.                           |");
     printf("\n\t| 4. Save data: Akan menyimpan data user ke dalam file .txt                           |");
-    printf("\n\t| 5. Help: Menampilkan menu bantuan.                                                  |");
-    printf("\n\t| 6. Credits: Menampilkan Anggota Kelompok.                                           |");
-    printf("\n\t| 7. Exit: Keluar dari program.                                                       |");
+    printf("\n\t| 5. Cari data : Akan mencari data dari kategori listrik                              |");
+    printf("\n\t| 6. Help: Menampilkan menu bantuan.                                                  |");
+    printf("\n\t| 7. Credits: Menampilkan Anggota Kelompok.                                           |");
+    printf("\n\t| 8. Exit: Keluar dari program.                                                       |");
     printf("\n\t|=====================================================================================|\n");
     system("pause");
 }
@@ -509,13 +603,14 @@ uint getMenu() {
     printf("| 2. Tampilkan Device             |\n");
     printf("| 3. Statistik                    |\n");
     printf("| 4. Save data                    |\n");
-    printf("| 5. Help                         |\n");
-    printf("| 6. Credits                      |\n");
-    printf("| 7. Exit                         |\n");
+    printf("| 5. Cari Data                    |\n");
+    printf("| 6. Help                         |\n");
+    printf("| 7. Credits                      |\n");
+    printf("| 8. Exit                         |\n");
     printf("|=================================|\n");
 
     uint menuInput;
-    printf("\nMasukkan input (1 - 7) : ");
+    printf("\nMasukkan input (1 - 8) : ");
     scanf("%d", &menuInput);
     return menuInput;
 }
