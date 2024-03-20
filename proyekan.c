@@ -1,3 +1,15 @@
+/*Program Menghitung Konsumsi Alat Elektronik
+/*
+Tanggal : 18/03/2024
+
+no. grup : 11
+Nama anggota :
+1. Azka Nabihan (2306250541)
+2. Muhammad Arya Wiandra (2306218295)
+
+Versi : 1.8
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,7 +100,7 @@ int main(void)
     int umur;
 
     //login
-    login(nama, &umur);
+    // login(nama, &umur);
     
     animateLogo();
 
@@ -202,11 +214,11 @@ int main(void)
 }
 
 void searchWatt(Category categories[], int select, uint categoryCount){
-    int i, temp;
+    int i, temp = 0; // Inisialisasi temp
     switch(select){
         case 1:
-            for (i = 0; i<categoryCount - 1; i++){
-                if(categories[i].totalWatt > categories[i+1].totalWatt){
+            for (i = 1; i < categoryCount; i++){ // Mulai dari indeks 1
+                if(categories[i].totalWatt > 0 && categories[temp].totalWatt > 0 && categories[i].totalWatt > categories[temp].totalWatt){
                     temp = i;
                 }
             }
@@ -214,8 +226,8 @@ void searchWatt(Category categories[], int select, uint categoryCount){
             printf("Total daya: %.2f watt\n", categories[temp].totalWatt);
             break;
         case 2:
-            for (i = 0; i<categoryCount - 1; i++){
-                if(categories[i].totalWatt < categories[i+1].totalWatt){
+            for (i = 1; i < categoryCount; i++){ 
+                if(categories[i].totalWatt > 0 && categories[temp].totalWatt > 0 && categories[i].totalWatt < categories[temp].totalWatt){
                     temp = i;
                 }
             }
@@ -229,24 +241,33 @@ void searchWatt(Category categories[], int select, uint categoryCount){
 
 
 void searchTotalConsumption(Category categories[], int select, uint categoryCount){
-    int i, j;
+    int i, temp = 0; // Inisialisasi temp
 
-    switch (select)
-    {
-    // Mencari dari terbanyak
-    case 1:
-        printf("\nKategori dengan konsumsi terbanyak: %s\n", categories[categoryCount-1].name);
-        printf("Total konsumsi daya: %.2f kwh\n", categories[categoryCount].totalConsumption);
-        break;
-    // Mencari dari tersedikit
-    case 2:
-        printf("\nKategori dengan konsumsi paling sedikit: %s\n", categories[0].name);
-        printf("Total konsumsi daya: %.2f kwh\n", categories[0].totalConsumption);
-        break;
-    default:
-        break;
+    switch(select){
+        case 1:
+            for (i = 1; i < categoryCount; i++){
+                if(categories[i].totalConsumption > 0 && categories[temp].totalConsumption > 0 && categories[i].totalConsumption > categories[temp].totalConsumption){
+                    temp = i;
+                }
+            }
+            printf("\nKategori dengan konsumsi terbesar: %s\n", categories[temp].name);
+            printf("Total konsumsi (kwh): %.2f watt\n", categories[temp].totalConsumption);
+            break;
+        case 2:
+            for (i = 1; i < categoryCount; i++){
+                if (categories[i].totalConsumption > 0 && categories[temp].totalConsumption > 0 && categories[i].totalConsumption < categories[temp].totalConsumption)
+                {
+                    temp = i;
+                }
+            }
+            printf("\nKategori dengan konsumsi terkecil: %s\n", categories[temp].name);
+            printf("Total konsumsi (kwh): %.2f watt\n", categories[temp].totalConsumption);
+            break;
+        default:
+            break;
     }
 }
+
 
 void printToFile(char *nama, int *umur, Category categories[], uint *categoryCount){
     uint i;
@@ -311,7 +332,7 @@ void printToFile(char *nama, int *umur, Category categories[], uint *categoryCou
 void login(char *nama, int *umur) {
     printf("===== LOGIN =====\n");
     printf("Nama Anda: ");
-    scanf("%s", nama);
+    scanf(" %[^\n]", nama);
     printf("Umur Anda: ");
     scanf("%d", umur);
     printf("=================\n");
@@ -329,7 +350,7 @@ void login(char *nama, int *umur) {
     printf(".\n");
     Sleep(1000); // Jeda 1 detik
     printf("Login berhasil!\n\n");
-    Sleep(1500); // Jeda 0.5 detik
+    Sleep(1000); // Jeda 0.5 detik
     system("cls");
 }
 
